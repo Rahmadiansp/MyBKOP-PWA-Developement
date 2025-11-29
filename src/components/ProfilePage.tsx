@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Header } from './Header';
 import { User, Mail, Phone, MapPin, Camera, LogOut, Save } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from './picture/ImageWithFallback';
 
 interface ProfilePageProps {
   user: any;

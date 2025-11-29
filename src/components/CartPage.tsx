@@ -1,6 +1,6 @@
 import { Header } from './Header';
 import { ShoppingCart, Minus, Plus, Trash2 } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from './picture/ImageWithFallback';
 
 interface CartPageProps {
   cart: any[];

@@ -9,7 +9,7 @@ import { ProfilePage } from './components/ProfilePage';
 import { AdminManageMenu } from './components/AdminManageMenu';
 import { BottomNav } from './components/BottomNav';
 import { projectId, publicAnonKey } from './utils/supabase/info';
-import { toast, Toaster } from 'sonner@2.0.3';
+import { toast, Toaster } from 'sonner';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-75c29e11`;
 

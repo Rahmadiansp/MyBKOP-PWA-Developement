@@ -156,17 +156,7 @@ export function AuthPage({ onLogin, onSignup }: AuthPageProps) {
               {loading ? 'Memproses...' : isLogin ? 'Masuk' : 'Daftar'}
             </button>
           </form>
-
-          {isLogin && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <p className="text-sm text-blue-800 mb-2">
-                <strong>Demo Akun:</strong>
-              </p>
-              <p className="text-xs text-blue-700">
-                <strong>Admin:</strong> admin@mybkop.com / admin123
-              </p>
-            </div>
-          )}
+          
         </div>
       </div>
     </div>

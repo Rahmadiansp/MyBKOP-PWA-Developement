@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Header } from './Header';
 import { ArrowLeft, MapPin, CreditCard } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from './picture/ImageWithFallback';
 
 interface CheckoutPageProps {
   cart: any[];

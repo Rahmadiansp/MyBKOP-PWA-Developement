@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, Heart, Minus, Plus, ShoppingCart } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from './picture/ImageWithFallback';
 
 interface CoffeeDetailProps {
   coffee: any;

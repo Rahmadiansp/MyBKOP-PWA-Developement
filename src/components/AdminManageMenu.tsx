@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Header } from './Header';
 import { Plus, Edit2, Trash2, X } from 'lucide-react';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import { ImageWithFallback } from './picture/ImageWithFallback';
 
 interface AdminManageMenuProps {
   coffees: any[];
