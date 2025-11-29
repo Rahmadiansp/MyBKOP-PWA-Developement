@@ -304,6 +304,31 @@ export default function App() {
     }
   };
 
+  // Admin image upload handler
+  const handleUploadCoffeeImage = async (file: File) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch(`${API_BASE}/admin/coffee-image`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: formData,
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        return data; // Return imageUrl and imageStoragePath
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('Error uploading coffee image:', error);
+      toast.error('Gagal mengupload gambar');
+      throw error;
+    }
+  };
+
   // Order handler
   const handleSubmitOrder = async (paymentName: string, notes: string) => {
     try {
@@ -532,9 +557,11 @@ export default function App() {
       {currentPage === 'admin' && user?.role === 'admin' && (
         <AdminManageMenu
           coffees={coffees}
+          accessToken={accessToken}
           onAddCoffee={handleAddCoffee}
           onUpdateCoffee={handleUpdateCoffee}
           onDeleteCoffee={handleDeleteCoffee}
+          onUploadImage={handleUploadCoffeeImage}
         />
       )}
 

@@ -1,17 +1,24 @@
 import { useState } from 'react';
 import { Header } from './Header';
-import { Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Upload } from 'lucide-react';
 import { ImageWithFallback } from './picture/ImageWithFallback';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
 
+const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-75c29e11`;
+
+// Di file AdminManageMenu.tsx
 interface AdminManageMenuProps {
   coffees: any[];
+  accessToken: string;
   onAddCoffee: (coffee: any) => Promise<void>;
   onUpdateCoffee: (id: string, coffee: any) => Promise<void>;
   onDeleteCoffee: (id: string) => Promise<void>;
+  onUploadImage: (file: File) => Promise<any>; // Tambahkan ini
 }
 
 export function AdminManageMenu({
   coffees,
+  accessToken,
   onAddCoffee,
   onUpdateCoffee,
   onDeleteCoffee,
@@ -19,12 +26,16 @@ export function AdminManageMenu({
   const [showModal, setShowModal] = useState(false);
   const [editingCoffee, setEditingCoffee] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState('');
 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     price: '',
     image: '',
+    imageStoragePath: '',
     category: 'Hot Coffee',
   });
 
@@ -38,8 +49,10 @@ export function AdminManageMenu({
         description: coffee.description,
         price: coffee.price.toString(),
         image: coffee.image,
+        imageStoragePath: coffee.imageStoragePath || '',
         category: coffee.category,
       });
+      setPreviewUrl(coffee.image);
     } else {
       setEditingCoffee(null);
       setFormData({
@@ -47,19 +60,82 @@ export function AdminManageMenu({
         description: '',
         price: '',
         image: '',
+        imageStoragePath: '',
         category: 'Hot Coffee',
       });
+      setPreviewUrl('');
     }
+    setSelectedFile(null);
     setShowModal(true);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingCoffee(null);
+    setSelectedFile(null);
+    setPreviewUrl('');
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleUploadImage = async () => {
+    if (!selectedFile) return;
+
+    setUploadingImage(true);
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('image', selectedFile);
+
+      const res = await fetch(`${API_BASE}/admin/coffee-image`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formDataUpload,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setFormData({
+          ...formData,
+          image: data.imageUrl,
+          imageStoragePath: data.imageStoragePath,
+        });
+        setPreviewUrl(data.imageUrl);
+        setSelectedFile(null);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Gagal upload gambar');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Upload image first if there's a selected file
+    if (selectedFile) {
+      await handleUploadImage();
+      // Wait a bit for state to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
     setLoading(true);
 
     try {
@@ -67,7 +143,8 @@ export function AdminManageMenu({
         name: formData.name,
         description: formData.description,
         price: Number(formData.price),
-        image: formData.image,
+        image: formData.image || previewUrl,
+        imageStoragePath: formData.imageStoragePath,
         category: formData.category,
       };
 
@@ -214,24 +291,50 @@ export function AdminManageMenu({
 
               <div>
                 <label className="block text-sm text-gray-700 mb-2">
-                  URL Gambar
+                  Gambar Menu
                 </label>
-                <input
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  placeholder="https://..."
-                />
-                {formData.image && (
-                  <div className="mt-2">
-                    <ImageWithFallback
-                      src={formData.image}
-                      alt="Preview"
-                      className="w-full h-40 object-cover rounded-lg"
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                      id="imageUpload"
                     />
+                    <label
+                      htmlFor="imageUpload"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-amber-500 cursor-pointer transition-colors"
+                    >
+                      <Upload className="w-5 h-5 text-gray-400" />
+                      <span className="text-sm text-gray-600">
+                        {selectedFile ? selectedFile.name : 'Pilih gambar dari komputer'}
+                      </span>
+                    </label>
                   </div>
-                )}
+
+                  {previewUrl && (
+                    <div className="relative">
+                      <ImageWithFallback
+                        src={previewUrl}
+                        alt="Preview"
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      {selectedFile && !formData.image && (
+                        <div className="absolute top-2 right-2">
+                          <button
+                            type="button"
+                            onClick={handleUploadImage}
+                            disabled={uploadingImage}
+                            className="px-3 py-1 bg-amber-600 text-white text-sm rounded hover:bg-amber-700 disabled:opacity-50"
+                          >
+                            {uploadingImage ? 'Uploading...' : 'Upload'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
@@ -262,7 +365,7 @@ export function AdminManageMenu({
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || uploadingImage}
                   className="flex-1 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50"
                 >
                   {loading ? 'Menyimpan...' : editingCoffee ? 'Update' : 'Tambah'}
